@@ -1,0 +1,11 @@
+What is your refund policy?
+We offer a 30-day money back guarantee on all products. Contact support@company.com to initiate a refund.
+
+How do I reset my password?
+Go to the login page and click "Forgot Password". Enter your email and we will send a reset link within 5 minutes.
+
+What are your support hours?
+Our support team is available Monday to Friday, 9am to 6pm EST. For urgent issues email priority@company.com.
+
+How do I cancel my subscription?
+Login to your account, go to Settings > Subscription > Cancel. Your access continues until end of billing period.
