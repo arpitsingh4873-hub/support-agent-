@@ -42,11 +42,17 @@ def chat(question:str, session_id:str = "default"):
     context_chunks = search_documents(question)
     context = "\n".join(context_chunks)
 
+    if not context.strip():
+        return {
+            "answer": "I don't have enough information to answer this. Escalating to a human agent.",
+            "escalate": True,
+            "session_id": session_id
+        }
+
     history = format_history(session_id)
 
-    prompt = f"""You are a helpful support agent.
-    Use the following context to answer the question.
-    If answer is not in context, say "i dont have that information"
+    prompt = f"""You are a customer support agent. You ONLY answer using the context below.
+    If the answer is NOT found in the context, you MUST reply with exactly one word: ESCALATE
 
 context:
 {context}
@@ -64,5 +70,13 @@ Answer:"""
     )
     response = llm.invoke(prompt)
     answer = response.content
+
+    if "ESCALATE" in answer:
+        return {
+            "answer": "This requires human assistance. Connecting you to an agent.",
+            "escalate": True,
+            "session_id": session_id
+        }
+    
     add_to_history(session_id, question, answer)
-    return {"answer": answer , "session_id": session_id}
+    return {"answer": answer ,"escalate": False, "session_id": session_id}
