@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,UploadFile, File
+import shutil
 from dotenv import load_dotenv
 from app.memory import get_history,add_to_history,format_history
 from langchain_openai import ChatOpenAI
@@ -36,6 +37,15 @@ def test_llm():
 def search(query:str):
     results = search_documents(query)
     return {"results":results}
+
+@app.post("/upload")
+def upload_file(file: UploadFile = File(...)):
+    file_path = f"docs/{file.filename}"
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    result = ingest_document(file_path)
+    return {"message": f"File uploaded and ingested", "details": result}
 
 @app.get("/chat")
 def chat(question:str, session_id:str = "default"):

@@ -1,10 +1,13 @@
-from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import PyPDFLoader,TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 def ingest_document(file_path:str):
-    loader = TextLoader(file_path, encoding="utf-8")
+    if file_path.endswith(".pdf"):
+        loader = PyPDFLoader(file_path)
+    else:
+        loader = TextLoader(file_path, encoding = "utf-8")
     documents = loader.load()
 
     splitter = RecursiveCharacterTextSplitter(
