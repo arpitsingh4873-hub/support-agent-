@@ -9,8 +9,11 @@ from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 import asyncio
 import os
+from app.database import init_db, SessionLocal, Conversation
+import uuid
 load_dotenv()
 app = FastAPI()
+init_db()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -93,6 +96,16 @@ Answer:"""
     answer = response.content
 
     if "ESCALATE" in answer:
+        db = SessionLocal()
+        db.add(Conversation(
+            id=str(uuid.uuid4()),
+            session_id=session_id,
+            question=question,
+            answer="Escalated to human agent",
+            escalated=True
+        ))
+        db.commit()
+        db.close()
         return {
             "answer": "This requires human assistance. Connecting you to an agent.",
             "escalate": True,
@@ -100,6 +113,17 @@ Answer:"""
         }
     
     add_to_history(session_id, question, answer)
+    # Save to database
+    db = SessionLocal()
+    db.add(Conversation(
+        id=str(uuid.uuid4()),
+        session_id=session_id,
+        question=question,
+        answer=answer,
+        escalated=False
+    ))
+    db.commit()
+    db.close()
     return {"answer": answer ,"escalate": False, "session_id": session_id}
 
 @app.get("/chat-stream")
@@ -135,7 +159,7 @@ Answer:"""
             full_answer += token
             yield f"{token}"
         add_to_history(session_id, question, full_answer)
-
+    # Save to database
     return StreamingResponse(
     generate(),
     media_type="text/plain",
