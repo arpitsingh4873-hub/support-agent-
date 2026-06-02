@@ -11,6 +11,7 @@ import asyncio
 import os
 from app.database import init_db, SessionLocal, Conversation
 import uuid
+import requests
 load_dotenv()
 app = FastAPI()
 init_db()
@@ -106,6 +107,7 @@ Answer:"""
         ))
         db.commit()
         db.close()
+        notify_slack(session_id, question)
         return {
             "answer": "This requires human assistance. Connecting you to an agent.",
             "escalate": True,
@@ -165,3 +167,10 @@ Answer:"""
     media_type="text/plain",
     headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"}
     )
+
+def notify_slack(session_id: str, question: str):
+    slack_url = os.getenv("SLACK_WEBHOOK_URL")
+    message = {
+        "text": f"🚨 *Human agent needed!*\n*Session:* {session_id}\n*Question:* {question}"
+    }
+    requests.post(slack_url, json=message)
