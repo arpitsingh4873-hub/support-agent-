@@ -1,5 +1,6 @@
 from fastapi import FastAPI,UploadFile, File
 import shutil
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.memory import get_history,add_to_history,format_history
 from langchain_openai import ChatOpenAI
@@ -10,6 +11,12 @@ import asyncio
 import os
 load_dotenv()
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 @app.get("/")
 def home():
@@ -129,4 +136,8 @@ Answer:"""
             yield f"{token}"
         add_to_history(session_id, question, full_answer)
 
-    return StreamingResponse(generate(), media_type="text/plain")
+    return StreamingResponse(
+    generate(),
+    media_type="text/plain",
+    headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"}
+    )
