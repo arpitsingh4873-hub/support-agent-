@@ -174,3 +174,26 @@ def notify_slack(session_id: str, question: str):
         "text": f"🚨 *Human agent needed!*\n*Session:* {session_id}\n*Question:* {question}"
     }
     requests.post(slack_url, json=message)
+
+
+@app.get("/history/{session_id}")
+def get_history_db(session_id: str):
+    db = SessionLocal()
+    conversations = db.query(Conversation)\
+        .filter(Conversation.session_id == session_id)\
+        .order_by(Conversation.timestamp)\
+        .all()
+    db.close()
+    
+    return {
+        "session_id": session_id,
+        "conversations": [
+            {
+                "question": c.question,
+                "answer": c.answer,
+                "escalated": c.escalated,
+                "timestamp": c.timestamp
+            }
+            for c in conversations
+        ]
+    }
